@@ -9,33 +9,163 @@
   <!-- Bootstrap Icons -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
   <style>
-    body { background: #0b0d12; color: #e9ecf1; }
-    .navbar, .dropdown-menu { background: #0f1420; }
-    .brand-gradient {
-      display: inline-block;
-      background: linear-gradient(135deg,#5b8eff,#6ac6ff);
-      background-clip: text;
-      -webkit-background-clip: text;
-      color: transparent;
-      -webkit-text-fill-color: transparent;
-    }
-    .card { background: #111727; border: 1px solid rgba(255,255,255,.08); }
-    .table thead th { color: #9bb5ff; border-bottom-color: rgba(255,255,255,.12); }
-    .table tbody tr { border-color: rgba(255,255,255,.08); }
-    .sql { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size:.9rem; white-space: pre; overflow: auto; background: #0b0f1a; color: #d6ffe9; border: 1px solid rgba(255,255,255,.08); border-radius:.5rem; padding:1rem; }
-    .kpi { display:flex; gap:.75rem; align-items:center; }
-    .kpi .bi { font-size:1.3rem; }
-    .badge-soft { background: rgba(106,198,255,.15); color:#6ac6ff; border:1px solid rgba(106,198,255,.35); }
-    .section-title { letter-spacing:.02em; }
-    .table-responsive { max-height: 420px; }
-    .btn-outline-light { border-color: rgba(255,255,255,.25); }
-    .footer-note { color:#b4c0d0; }
+      /* 🌙 Tema oscuro */
+      body[data-bs-theme="dark"] {
+        background: #0b0d12;
+        color: #e9ecf1;
+      }
+
+      body[data-bs-theme="dark"] .navbar,
+      body[data-bs-theme="dark"] .dropdown-menu {
+        background: #0f1420;
+      }
+
+      body[data-bs-theme="dark"] .card {
+        background: #111727;
+        border: 1px solid rgba(255,255,255,.08);
+      }
+
+      body[data-bs-theme="dark"] .table thead th {
+        color: #9bb5ff;
+        border-bottom-color: rgba(255,255,255,.12);
+      }
+
+      body[data-bs-theme="dark"] .table tbody tr {
+        border-color: rgba(255,255,255,.08);
+      }
+
+      body[data-bs-theme="dark"] .sql {
+        background: #0b0f1a;
+        color: #d6ffe9;
+        border: 1px solid rgba(255,255,255,.08);
+      }
+
+      body[data-bs-theme="dark"] .badge-soft {
+        background: rgba(106,198,255,.15);
+        color: #6ac6ff;
+        border: 1px solid rgba(106,198,255,.35);
+      }
+
+      body[data-bs-theme="dark"] .footer-note {
+        color: #b4c0d0;
+      }
+
+      /* ☀️ Tema claro */
+      body[data-bs-theme="light"] {
+        background: #f8f9fc; /* Fondo general */
+        color: #1a1d27;      /* Texto principal */
+      }
+
+      body[data-bs-theme="light"] .navbar,
+      body[data-bs-theme="light"] .dropdown-menu {
+        background: #ffffff;
+        border-bottom: 1px solid rgba(0,0,0,.08);
+      }
+
+      body[data-bs-theme="light"] .brand-gradient {
+        background: linear-gradient(135deg, #4b7cf5, #72d5ff);
+        background-clip: text;
+        -webkit-background-clip: text;
+        color: transparent;
+        -webkit-text-fill-color: transparent;
+      }
+
+      body[data-bs-theme="light"] .card {
+        background: #ffffff;
+        border: 1px solid rgba(0,0,0,.1);
+        box-shadow: 0 2px 8px rgba(0,0,0,.04);
+      }
+
+      body[data-bs-theme="light"] .table thead th {
+        color: #3f6de0;
+        border-bottom-color: rgba(0,0,0,.12);
+      }
+
+      body[data-bs-theme="light"] .table tbody tr {
+        border-color: rgba(0,0,0,.05);
+      }
+
+      body[data-bs-theme="light"] .sql {
+        background: #f3f5fa;
+        color: #1a1d27;
+        border: 1px solid rgba(0,0,0,.1);
+      }
+
+      body[data-bs-theme="light"] .kpi .bi {
+        color: #3f6de0;
+      }
+
+      body[data-bs-theme="light"] .badge-soft {
+        background: rgba(63,109,224,.1);
+        color: #3f6de0;
+        border: 1px solid rgba(63,109,224,.25);
+      }
+
+      body[data-bs-theme="light"] .footer-note {
+        color: #6b7589;
+      }
+
+      /* Estilos comunes (ambos temas) */
+      .brand-gradient {
+        display: inline-block;
+        background: linear-gradient(135deg,#5b8eff,#6ac6ff);
+        background-clip: text;
+        -webkit-background-clip: text;
+        color: transparent;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .kpi {
+        display: flex;
+        gap: .75rem;
+        align-items: center;
+      }
+
+      .kpi .bi {
+        font-size: 1.3rem;
+      }
+
+      .section-title {
+        letter-spacing: .02em;
+      }
+
+      .table-responsive {
+        max-height: 420px;
+      }
+
+      .btn-outline-light {
+        border-color: rgba(255,255,255,.25);
+      }
+      body[data-bs-theme="light"] .table.table-dark thead th {
+        background-color: #e9ecf6;   /* un gris azulado muy claro */
+        color:  #3f6de0;           /* texto oscuro para contraste */
+      }
+
+      /* Opcional: filas alternadas en tema claro */
+      body[data-bs-theme="light"] .table.table-dark tbody tr:nth-child(odd) {
+        background-color: #f7f9fc;
+      }
+
+      body[data-bs-theme="light"] .table.table-dark tbody tr:nth-child(even) {
+        background-color: #ffffff;
+      }
+
+
+
+
   </style>
 </head>
-<body>
+<body data-bs-theme = "dark">
+  
   <!-- NAVBAR -->
   <nav class="navbar navbar-expand-lg navbar-dark border-bottom border-secondary-subtle">
     <div class="container-fluid">
+
+      <!--Agrego botón para cambiar de tema-->
+      <button onclick="cambiarTema()" class="btn rounded-fill">
+        <i id="icono-tema" class="bi bi-sun-fill"></i>
+      </button>
+
       <a class="navbar-brand fw-semibold" href="#"><span class="brand-gradient">Librería · DataBase</span></a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbars" aria-controls="navbars" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
@@ -549,6 +679,32 @@ DROP TABLE #GastoClientes;`;
     (async ()=>{ try { await renderRetrasos(); await renderClientes(); await renderFact(); await renderGasto(); injectSQL(); } catch(err){ console.error(err); alert('No se pudo obtener datos de la API. Configurá la URL con setApiBase(\'http://host:puerto\')'); } })();
   </script>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  const temaClaro = () => {
+    document.body.setAttribute('data-bs-theme', 'light');
+    document.querySelector('#icono-tema').setAttribute("class", "bi bi-moon-fill");
+  };
+
+  const temaOscuro = () => {
+    document.body.setAttribute('data-bs-theme', 'dark');
+    document.querySelector('#icono-tema').setAttribute("class", "bi bi-sun-fill");
+  };
+
+  const cambiarTema = () => {
+    const temaActual = document.body.getAttribute('data-bs-theme');
+    temaActual === 'dark' ? temaClaro() : temaOscuro();
+    localStorage.setItem('tema', temaActual === 'dark' ? 'light' : 'dark'); // Guarda preferencia
+  };
+
+  // Cargar tema guardado
+  document.addEventListener("DOMContentLoaded", () => {
+    const temaGuardado = localStorage.getItem('tema');
+    if (temaGuardado === 'light') temaClaro();
+    else temaOscuro(); // valor por defecto
+  });
+</script>
+
 </body>
 </html>
