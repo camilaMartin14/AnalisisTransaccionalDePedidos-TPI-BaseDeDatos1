@@ -212,6 +212,37 @@ app.MapPost("/api/autores", async (IDbConnection db, AutorDto dto) =>
     }
 });
 
+// ---------- Consulta #5: Todos los autores ----------
+app.MapGet("/api/autores", async (IDbConnection db) =>
+{
+    var sql = @"
+SELECT 
+    a.id_autor,
+    a.nombre,
+    a.apellido,
+    a.biografia,
+    a.fecha_nacimiento,
+    n.nacionalidad,
+    s.sexo
+FROM autores a
+LEFT JOIN nacionalidades n ON a.id_nacionalidad = n.id_nacionalidad
+LEFT JOIN sexos s ON a.id_sexo = s.id_sexo
+ORDER BY a.apellido, a.nombre;";
+
+    var data = await db.QueryAsync(sql);
+
+    return Results.Ok(data.Select(r => new {
+        idAutor = (int)r.id_autor,
+        nombre = (string)r.nombre,
+        apellido = (string)r.apellido,
+        biografia = (string?)r.biografia,
+        fechaNacimiento = r.fecha_nacimiento is null ? null : ((DateTime)r.fecha_nacimiento).ToString("yyyy-MM-dd"),
+        nacionalidad = (string?)r.nacionalidad,
+        sexo = (string?)r.sexo
+    }));
+});
+
+
 app.Run();
 
 record AutorDto(
