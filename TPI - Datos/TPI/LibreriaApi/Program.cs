@@ -161,34 +161,70 @@ ORDER BY [Año] DESC, [Mes], [Editorial];";
     }));
 });
 
-// ---------- Consulta #4: Ranking gasto anual ----------
-app.MapGet("/api/gasto-anual", async (IDbConnection db) =>
-{
-    // Usamos tabla temporal como en el enunciado
-    var sql = @"
-IF OBJECT_ID('tempdb..#GastoClientes') IS NOT NULL DROP TABLE #GastoClientes;
-SELECT  
-    c.cod_cliente, 
-    c.apellido + ' ' + c.nombre AS Cliente, 
-    SUM(dp.cantidad * dp.precio) AS TotalGastado
-INTO #GastoClientes
-FROM clientes c
-JOIN pedidos p ON c.cod_cliente = p.cod_cliente
-JOIN detalle_pedidos dp ON p.nro_pedido = dp.nro_pedido
-WHERE YEAR(p.fecha) = YEAR(GETDATE())
-GROUP BY c.cod_cliente, c.apellido, c.nombre;
+//// ---------- Consulta #4: Ranking gasto anual ---------- LORENZO
+//app.MapGet("/api/gasto-anual", async (IDbConnection db) =>
+//{
+//    // Usamos tabla temporal como en el enunciado
+//    var sql = @"
+//IF OBJECT_ID('tempdb..#GastoClientes') IS NOT NULL DROP TABLE #GastoClientes;
+//SELECT  
+//    c.cod_cliente, 
+//    c.apellido + ' ' + c.nombre AS Cliente, 
+//    SUM(dp.cantidad * dp.precio) AS TotalGastado
+//INTO #GastoClientes
+//FROM clientes c
+//JOIN pedidos p ON c.cod_cliente = p.cod_cliente
+//JOIN detalle_pedidos dp ON p.nro_pedido = dp.nro_pedido
+//WHERE YEAR(p.fecha) = YEAR(GETDATE())
+//GROUP BY c.cod_cliente, c.apellido, c.nombre;
 
-SELECT cod_cliente, Cliente, TotalGastado
-FROM #GastoClientes
-WHERE TotalGastado > ( SELECT AVG(TotalGastado) FROM #GastoClientes )
+//SELECT cod_cliente, Cliente, TotalGastado
+//FROM #GastoClientes
+//WHERE TotalGastado > ( SELECT AVG(TotalGastado) FROM #GastoClientes )
+//ORDER BY TotalGastado DESC;";
+//    var data = await db.QueryAsync(sql);
+//    return Results.Ok(data.Select(r => new {
+//        cod_cliente = (int)r.cod_cliente,
+//        cliente = (string)r.Cliente,
+//        totalGastado = (decimal)r.TotalGastado
+//    }));
+//});
+
+// ---------- Consulta #4 genérica: Gasto por cliente ----------
+app.MapGet("/api/gasto-clientes", async (IDbConnection db, int? year, bool soloSobrePromedio) =>
+{
+    var selectedYear = year ?? DateTime.Now.Year;
+
+    var sql = @"
+SELECT  
+    c.cod_cliente,
+    c.apellido + ' ' + c.nombre AS Cliente,
+    SUM(dp.cantidad * dp.precio) AS TotalGastado
+FROM clientes c
+LEFT JOIN pedidos p ON c.cod_cliente = p.cod_cliente AND YEAR(p.fecha) = @year
+LEFT JOIN detalle_pedidos dp ON p.nro_pedido = dp.nro_pedido
+GROUP BY c.cod_cliente, c.apellido, c.nombre
+HAVING @soloSobrePromedio = 0 
+   OR SUM(dp.cantidad * dp.precio) > (
+        SELECT AVG(total) FROM (
+            SELECT SUM(dp2.cantidad * dp2.precio) AS total
+            FROM clientes c2
+            LEFT JOIN pedidos p2 ON c2.cod_cliente = p2.cod_cliente AND YEAR(p2.fecha) = @year
+            LEFT JOIN detalle_pedidos dp2 ON p2.nro_pedido = dp2.nro_pedido
+            GROUP BY c2.cod_cliente
+        ) AS totales
+    )
 ORDER BY TotalGastado DESC;";
-    var data = await db.QueryAsync(sql);
+
+    var data = await db.QueryAsync(sql, new { year = selectedYear, soloSobrePromedio });
+
     return Results.Ok(data.Select(r => new {
         cod_cliente = (int)r.cod_cliente,
         cliente = (string)r.Cliente,
         totalGastado = (decimal)r.TotalGastado
     }));
 });
+
 
 // ---------- SP: crear autor ----------
 app.MapPost("/api/autores", async (IDbConnection db, AutorDto dto) =>
