@@ -1,0 +1,554 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Panel de Business Intelligence – Librería</title>
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    body { background: #0b0d12; color: #e9ecf1; }
+    .navbar, .dropdown-menu { background: #0f1420; }
+    .brand-gradient {
+      display: inline-block;
+      background: linear-gradient(135deg,#5b8eff,#6ac6ff);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      -webkit-text-fill-color: transparent;
+    }
+    .card { background: #111727; border: 1px solid rgba(255,255,255,.08); }
+    .table thead th { color: #9bb5ff; border-bottom-color: rgba(255,255,255,.12); }
+    .table tbody tr { border-color: rgba(255,255,255,.08); }
+    .sql { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size:.9rem; white-space: pre; overflow: auto; background: #0b0f1a; color: #d6ffe9; border: 1px solid rgba(255,255,255,.08); border-radius:.5rem; padding:1rem; }
+    .kpi { display:flex; gap:.75rem; align-items:center; }
+    .kpi .bi { font-size:1.3rem; }
+    .badge-soft { background: rgba(106,198,255,.15); color:#6ac6ff; border:1px solid rgba(106,198,255,.35); }
+    .section-title { letter-spacing:.02em; }
+    .table-responsive { max-height: 420px; }
+    .btn-outline-light { border-color: rgba(255,255,255,.25); }
+    .footer-note { color:#b4c0d0; }
+  </style>
+</head>
+<body>
+  <!-- NAVBAR -->
+  <nav class="navbar navbar-expand-lg navbar-dark border-bottom border-secondary-subtle">
+    <div class="container-fluid">
+      <a class="navbar-brand fw-semibold" href="#"><span class="brand-gradient">Librería · DataBase</span></a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbars" aria-controls="navbars" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbars">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item"><a class="nav-link" href="#sec-pedidos">Logística</a></li>
+          <li class="nav-item"><a class="nav-link" href="#sec-clientes">Clientes</a></li>
+          <li class="nav-item"><a class="nav-link" href="#sec-facturacion">Facturación</a></li>
+          <li class="nav-item"><a class="nav-link" href="#sec-analitica">Analítica</a></li>
+        </ul>
+        <div class="d-flex gap-2">
+          <button class="btn btn-sm btn-outline-light" data-bs-toggle="modal" data-bs-target="#modalSQLPack"><i class="bi bi-code-square me-1"></i>Ver SQL</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <header class="py-4 py-lg-5 border-bottom border-secondary-subtle">
+    <div class="container">
+      <div class="row g-4 align-items-center">
+        <div class="col-lg-7">
+          <h1 class="display-5 fw-bold section-title">Panel ejecutivo para toma de decisiones</h1>
+          <p class="lead text-secondary">Visualización clara de  pedidos pendientes de entrega y su nivel de retraso, clientes de alto valor, desempeño mensual por editorial y análisis de gasto anual por cliente.</p>
+          <div class="d-flex flex-wrap gap-2">
+            <a href="#sec-pedidos" class="btn btn-primary"><i class="bi bi-truck me-2"></i>Ver logística</a>
+            <a href="#sec-clientes" class="btn btn-outline-light"><i class="bi bi-people me-2"></i>Ver clientes</a>
+          </div>
+        </div>
+        <div class="col-lg-5">
+          <div class="row g-3">
+            <div class="col-12">
+              <div class="card shadow-sm">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                  <div class="kpi"><i class="bi bi-alarm text-secondary"></i><div>
+                    <div class="text-primary small">Pedidos con retraso</div>
+                    <div class="h4 mb-0 text-secondary" id="kpiRetraso">—</div>
+                  </div></div>
+                  <span class="badge badge-soft" id="kpiMaxDias">—</span>
+                </div>
+              </div>
+            </div>
+            <div class="col-12">
+              <div class="card shadow-sm">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                  <div class="kpi"><i class="bi bi-trophy text-secondary"></i><div>
+                    <div class="text-primary small">Top cliente (gasto)</div>
+                    <div class="h5 mb-0 text-secondary" id="kpiTopCliente">—</div>
+                  </div></div>
+                  <span class="badge badge-soft" id="kpiTopImporte">—</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- SECCIÓN: LOGÍSTICA (Consulta 1) -->
+  <section id="sec-pedidos" class="py-5">
+    <div class="container">
+      <div class="d-flex justify-content-between align-items-end mb-3">
+        <div>
+          <h2 class="h3 section-title mb-1"><i class="bi bi-truck me-2"></i>Alertas de Entregas Atrasadas</h2>
+          <p class="text-secondary mb-0">Pedidos vencidos y no entregados, ordenados por días de retraso. <span class="badge badge-soft">Consulta #1</span></p>
+        </div>
+        <div class="d-flex gap-2">
+          <button class="btn btn-sm btn-outline-light" data-sql-target="#sql1"><i class="bi bi-code"></i></button>
+          <button class="btn btn-sm btn-outline-light" onclick="exportTable('tblRetrasos','retrasos.csv')"><i class="bi bi-download"></i> CSV</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-dark table-striped align-middle" id="tblRetrasos">
+              <thead>
+                <tr>
+                  <th>N° Pedido</th>
+                  <th>Cliente</th>
+                  <th>Fecha pedido</th>
+                  <th>Fecha prevista</th>
+                  <th>Estado</th>
+                  <th>Días de retraso</th>
+                  <th>Total estimado</th>
+                  <th>Última actualización</th>
+                </tr>
+              </thead>
+              <tbody id="tbodyRetrasos"></tbody>
+            </table>
+          </div>
+          <details class="mt-3">
+            <summary class="text-secondary">Ver SQL</summary>
+            <div class="sql mt-2" id="sql1"></div>
+          </details>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECCIÓN: CLIENTES (Consulta 2) -->
+  <section id="sec-clientes" class="py-5 border-top border-secondary-subtle">
+    <div class="container">
+      <div class="d-flex justify-content-between align-items-end mb-3">
+        <div>
+          <h2 class="h3 section-title mb-1"><i class="bi bi-people me-2"></i>Clientes de Alto Valor</h2>
+          <p class="text-secondary mb-0">Sólo quienes superan el gasto promedio general. <span class="badge badge-soft">Consulta #2</span></p>
+        </div>
+        <div class="d-flex gap-2">
+          <button class="btn btn-sm btn-outline-light" data-sql-target="#sql2"><i class="bi bi-code"></i></button>
+          <button class="btn btn-sm btn-outline-light" onclick="exportTable('tblClientes','clientes_top.csv')"><i class="bi bi-download"></i> CSV</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle" id="tblClientes">
+              <thead>
+                <tr>
+                  <th>Código</th>
+                  <th>Cliente</th>
+                  <th>Cantidad de compras</th>
+                  <th>Total gastado</th>
+                  <th>Libro más comprado</th>
+                </tr>
+              </thead>
+              <tbody id="tbodyClientes"></tbody>
+            </table>
+          </div>
+          <details class="mt-3">
+            <summary class="text-secondary">Ver SQL</summary>
+            <div class="sql mt-2" id="sql2"></div>
+          </details>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECCIÓN: FACTURACIÓN (Consulta 3) -->
+  <section id="sec-facturacion" class="py-5 border-top border-secondary-subtle">
+    <div class="container">
+      <div class="d-flex justify-content-between align-items-end mb-3">
+        <div>
+          <h2 class="h3 section-title mb-1"><i class="bi bi-graph-up-arrow me-2"></i>Facturación Mensual por Editorial y Categoría</h2>
+          <p class="text-secondary mb-0">Sólo libros en Español con stock desde DISPO (Córdoba). Muestra combinaciones por mes/año y filtra promedios menores al mercado. <span class="badge badge-soft">Consulta #3</span></p>
+        </div>
+        <div class="d-flex gap-2">
+          <button class="btn btn-sm btn-outline-light" data-sql-target="#sql3"><i class="bi bi-code"></i></button>
+          <button class="btn btn-sm btn-outline-light" onclick="exportTable('tblFact','facturacion.csv')"><i class="bi bi-download"></i> CSV</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-dark table-striped" id="tblFact">
+              <thead>
+                <tr>
+                  <th>Editorial</th>
+                  <th>Categoría</th>
+                  <th>Año</th>
+                  <th>Mes</th>
+                  <th>Cant. Facturas</th>
+                  <th>Cant. Vendidas</th>
+                  <th>Importe Total</th>
+                  <th>Precio Promedio</th>
+                  <th>Primera Venta</th>
+                  <th>Última Venta</th>
+                </tr>
+              </thead>
+              <tbody id="tbodyFact"></tbody>
+            </table>
+          </div>
+          <details class="mt-3">
+            <summary class="text-secondary">Ver SQL</summary>
+            <div class="sql mt-2" id="sql3"></div>
+          </details>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECCIÓN: ANALÍTICA (Consulta 4 + SP) -->
+  <section id="sec-analitica" class="py-5 border-top border-secondary-subtle">
+    <div class="container">
+      <div class="row g-4">
+        <div class="col-lg-7">
+          <div class="d-flex justify-content-between align-items-end mb-2">
+            <div>
+              <h2 class="h4 section-title mb-1"><i class="bi bi-cash-coin me-2"></i>Ranking de Gasto Anual</h2>
+              <p class="text-secondary mb-0">Clientes cuyo gasto en el año supera el promedio general (tabla temporal). <span class="badge badge-soft">Consulta #4</span></p>
+            </div>
+            <div class="d-flex gap-2">
+              <button class="btn btn-sm btn-outline-light" data-sql-target="#sql4"><i class="bi bi-code"></i></button>
+              <button class="btn btn-sm btn-outline-light" onclick="exportTable('tblGasto','gasto_anual.csv')"><i class="bi bi-download"></i> CSV</button>
+            </div>
+          </div>
+          <div class="card h-90">
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-dark table-hover" id="tblGasto">
+                  <thead>
+                    <tr>
+                      <th>Código</th>
+                      <th>Cliente</th>
+                      <th>Total Gastado (año)</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbodyGasto"></tbody>
+                </table>
+              </div>
+              <details class="mt-3">
+                <summary class="text-secondary">Ver SQL</summary>
+                <div class="sql mt-2" id="sql4"></div>
+              </details>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-5">
+          <div class="d-flex justify-content-between align-items-end mb-2">
+            <div>
+              <h2 class="h4 section-title mb-1"><i class="bi bi-person-plus me-2"></i>Alta de Autor</h2>
+              <span class="badge badge-soft">Consulta #5</span>
+            </div>
+            <button class="btn btn-sm btn-outline-light" data-sql-target="#sqlSP"><i class="bi bi-code"></i></button>
+          </div>
+          <div class="card h-90">
+            <div class="card-body">
+              <form class="row g-3" onsubmit="event.preventDefault(); demoSP();">
+                <div class="col-6">
+                  <label class="form-label text-secondary">Nombre</label>
+                  <input class="form-control form-control-sm" required />
+                </div>
+                <div class="col-6">
+                  <label class="form-label text-secondary">Apellido</label>
+                  <input class="form-control form-control-sm" required />
+                </div>
+                <div class="col-12">
+                  <label class="form-label text-secondary">Biografía</label>
+                  <textarea class="form-control form-control-sm" rows="2"></textarea>
+                </div>
+                <div class="col-6">
+                  <label class="form-label text-secondary">Fecha de nacimiento</label>
+                  <input type="date" class="form-control form-control-sm" />
+                </div>
+                <div class="col-6">
+                  <label class="form-label text-secondary">Sexo</label>
+                  <input class="form-control form-control-sm" placeholder="ID o nombre (M/F/X)" />
+                </div>
+                <div class="col-12">
+                  <label class="form-label text-secondary">Nacionalidad</label>
+                  <input class="form-control form-control-sm" placeholder="ID o nombre (ej. Argentina)" />
+                </div>
+                <div class="col-12 d-flex gap-2">
+                  <button class="btn btn-primary btn-sm" type="submit"><i class="bi bi-check2-circle me-1"></i>Validar e Insertar</button>
+                  <button class="btn btn-outline-light btn-sm" type="button" onclick="resetSP()"><i class="bi bi-arrow-counterclockwise me-1"></i>Reiniciar</button>
+                </div>
+              </form>
+              <details class="mt-3">
+                <summary class="text-secondary">Ver SQL</summary>
+                <div class="sql mt-2" id="sqlSP"></div>
+              </details>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="py-4 border-top border-secondary-subtle">
+    <div class="container d-flex flex-wrap justify-content-between align-items-center gap-3">
+      <div class="footer-note">© <span id="year"></span> Librería · Panel de Consultas</div>
+      <div class="small text-secondary">Diseño responsive con Bootstrap 5. Exportación a CSV y vistas SQL integradas.</div>
+    </div>
+  </footer>
+
+  <!-- MODAL: Ver todo el SQL -->
+  <div class="modal fade" id="modalSQLPack" tabindex="-1" aria-labelledby="modalSQLPackLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+      <div class="modal-content" style="background:#0b0f1a;color:#e9ecf1;border:1px solid rgba(255,255,255,.12)">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalSQLPackLabel"><i class="bi bi-filetype-sql me-2"></i>Paquete completo de consultas</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <h6>Consulta #1</h6>
+          <div class="sql" id="sql1m"></div>
+          <hr/>
+          <h6>Consulta #2</h6>
+          <div class="sql" id="sql2m"></div>
+          <hr/>
+          <h6>Consulta #3</h6>
+          <div class="sql" id="sql3m"></div>
+          <hr/>
+          <h6>Consulta #4</h6>
+          <div class="sql" id="sql4m"></div>
+          <hr/>
+          <h6>Procedimiento almacenado</h6>
+          <div class="sql" id="sqlSPm"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ====== API CONFIG ======
+    const API_BASE = localStorage.getItem('apiBase') || 'http://localhost:5073';
+    function setApiBase(url){ localStorage.setItem('apiBase', url); alert('API base actualizada a ' + url); }
+
+    async function fetchJSON(path){
+      const r = await fetch(`${API_BASE}${path}`);
+      if(!r.ok) throw new Error(`HTTP ${r.status}`);
+      return r.json();
+    }
+
+    // ====== RENDER TABLES & KPIs (con datos reales) ======
+    function number(n){ return Number(n).toLocaleString('es-AR', { minimumFractionDigits: 0 }) }
+
+    async function renderRetrasos(){
+      const data = await fetchJSON('/api/retrasos');
+      const tbody = document.getElementById('tbodyRetrasos');
+      tbody.innerHTML = data.map(r => `
+        <tr>
+          <td>#${r.nro_pedido}</td>
+          <td>${r.cliente}</td>
+          <td>${r.fechaPedido}</td>
+          <td>${r.fechaPrevista}</td>
+          <td><span class="badge text-bg-${r.estadoActual==='Enviado'?'warning':'info'}">${r.estadoActual}</span></td>
+          <td><span class="fw-semibold">${r.diasRetraso}</span></td>
+          <td>$ ${number(r.totalEstimado)}</td>
+          <td>${r.ultimaActualizacion}</td>
+        </tr>`).join('');
+      document.getElementById('kpiRetraso').textContent = data.length;
+      const maxDias = data.length ? Math.max(...data.map(r=>r.diasRetraso)) : 0;
+      document.getElementById('kpiMaxDias').textContent = `Máx: ${maxDias} días`;
+    }
+
+    async function renderClientes(){
+      const data = await fetchJSON('/api/clientes/top');
+      const tbody = document.getElementById('tbodyClientes');
+      tbody.innerHTML = data.map(c => `
+        <tr>
+          <td>${c.cod_cliente}</td>
+          <td>${c.cliente}</td>
+          <td>${c.cantidadCompras}</td>
+          <td>$ ${number(c.totalGastado)}</td>
+          <td>${c.libroMasComprado}</td>
+        </tr>`).join('');
+      if(data[0]){
+        document.getElementById('kpiTopCliente').textContent = data[0].cliente;
+        document.getElementById('kpiTopImporte').textContent = `$ ${number(data[0].totalGastado)}`;
+      }
+    }
+
+    async function renderFact(){
+      const data = await fetchJSON('/api/facturacion');
+      const tbody = document.getElementById('tbodyFact');
+      tbody.innerHTML = data.map(f => `
+        <tr>
+          <td>${f.editorial}</td>
+          <td>${f.categoria}</td>
+          <td>${f.anio}</td>
+          <td>${String(f.mes).padStart(2,'0')}</td>
+          <td>${f.cantFacturas}</td>
+          <td>${f.cantVendidas}</td>
+          <td>$ ${number(f.importeTotal)}</td>
+          <td>$ ${number(f.precioPromedio)}</td>
+          <td>${f.primeraVenta?.slice(0,10)}</td>
+          <td>${f.ultimaVenta?.slice(0,10)}</td>
+        </tr>`).join('');
+    }
+
+    async function renderGasto(){
+      const data = await fetchJSON('/api/gasto-anual');
+      const tbody = document.getElementById('tbodyGasto');
+      tbody.innerHTML = data.map(g => `
+        <tr>
+          <td>${g.cod_cliente}</td>
+          <td>${g.cliente}</td>
+          <td>$ ${number(g.totalGastado)}</td>
+        </tr>`).join('');
+    }
+
+    // Exportación CSV básica
+    function exportTable(tableId, filename){
+      const rows = [...document.querySelectorAll(`#${tableId} tr`)].map(tr =>
+        [...tr.children].map(td => '"' + td.innerText.replaceAll('"','""') + '"').join(',')
+      ).join('\n');
+      const blob = new Blob([rows], {type:'text/csv;charset=utf-8;'});
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // Demo SP (POST a la API)
+    async function demoSP(){
+      const form = document.querySelector('#sec-analitica form');
+      const [nombre, apellido, biografia, fecha_nac, sexo, nacionalidad] = [...form.querySelectorAll('input, textarea')].map(e=>e.value);
+      const payload = { nombre, apellido, biografia, fecha_nacimiento: fecha_nac, sexo, nacionalidad };
+      const r = await fetch(`${API_BASE}/api/autores`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
+      const msg = await r.text();
+      alert(msg);
+    }
+    function resetSP(){ document.querySelector('#sec-analitica form').reset(); }
+
+    // SQL source (del PDF original)
+    const SQL1 = `SELECT  
+    p.nro_pedido, 
+    c.nombre + ' ' + c.apellido AS Cliente, 
+    CONVERT(VARCHAR(10), p.fecha, 103) AS FechaPedido, 
+    CONVERT(VARCHAR(10), p.fecha_entrega, 103) AS FechaPrevista, 
+    es.estado_actual AS EstadoActual, 
+    DATEDIFF(DAY, p.fecha_entrega, GETDATE()) AS DiasRetraso, 
+    SUM(dp.cantidad * dp.precio) AS TotalEstimado, 
+    te.fecha_estado AS UltimaActualizacion 
+FROM pedidos p 
+JOIN clientes c ON p.cod_cliente = c.cod_cliente 
+JOIN detalle_pedidos dp ON p.nro_pedido = dp.nro_pedido 
+JOIN tracking_envios te ON te.id_tracking = ( 
+    SELECT TOP 1 id_tracking FROM tracking_envios t2 WHERE t2.nro_pedido =  p.nro_pedido ORDER BY t2.fecha_estado DESC) 
+JOIN estados_envios es ON te.id_estado_envio = es.id_estado_envio 
+WHERE es.estado_actual != 'Entregado' AND p.fecha_entrega < GETDATE() 
+GROUP BY p.nro_pedido, c.nombre, c.apellido, p.fecha, p.fecha_entrega, es.estado_actual, te.fecha_estado 
+ORDER BY DiasRetraso DESC;`;
+
+    const SQL2 = `SELECT  
+    c.cod_cliente, 
+    c.apellido + ' ' + c.nombre AS Cliente, 
+    COUNT(DISTINCT f.nro_factura) AS [Cantidad de compras], 
+    SUM(d.cantidad * d.precio) AS [Total gastado], 
+    ( SELECT TOP 1 l.titulo  FROM libros l
+      JOIN detalle_facturas d2 ON l.cod_libro = d2.cod_libro 
+      JOIN facturas f2 ON d2.nro_factura = f2.nro_factura 
+      WHERE f2.cod_cliente = c.cod_cliente 
+      GROUP BY l.titulo 
+      ORDER BY SUM(d2.cantidad * d2.precio) DESC ) AS [Libro más comprado] 
+FROM clientes c 
+JOIN facturas f ON c.cod_cliente = f.cod_cliente 
+JOIN detalle_facturas d ON f.nro_factura = d.nro_factura 
+GROUP BY c.cod_cliente, c.apellido, c.nombre 
+HAVING SUM(d.cantidad * d.precio) > ( 
+    SELECT AVG(total) FROM ( 
+        SELECT SUM(d2.cantidad * d2.precio) AS total 
+        FROM facturas f2 JOIN detalle_facturas d2 ON f2.nro_factura = d2.nro_factura 
+        GROUP BY f2.cod_cliente ) AS totales ) 
+ORDER BY [Total gastado] DESC;`;
+
+    const SQL3 = `SELECT E.editorial AS Editorial, C.categoria AS Categoría, YEAR(F.fecha) AS Año, MONTH(F.fecha) AS Mes,
+    COUNT(DISTINCT F.nro_factura) AS [Cant. Facturas], SUM(DF.cantidad) AS [Cant. Vendidas],
+    SUM(DF.cantidad * DF.precio) AS [Importe Total], AVG(DF.precio * 1.0) AS [Precio Promedio],
+    MIN(CAST(F.fecha AS DATE)) AS [Primera Venta], MAX(CAST(F.fecha AS DATE)) AS [Última Venta]
+FROM facturas F
+JOIN detalle_facturas DF ON F.nro_factura = DF.nro_factura
+JOIN libros L ON DF.cod_libro = L.cod_libro
+JOIN editoriales E ON L.id_editorial = E.id_editorial
+JOIN idiomas I ON L.id_idioma = I.id_idioma
+JOIN libros_categorias LC ON L.cod_libro = LC.id_libro
+JOIN categorias C ON LC.id_categoria = C.id_categoria
+WHERE I.idioma = 'Español' AND F.fecha >= '2020-07-01' AND F.fecha < DATEFROMPARTS(YEAR(GETDATE()), MONTH(GETDATE()), 1) AND L.stock > 0
+GROUP BY E.editorial, C.categoria, YEAR(F.fecha), MONTH(F.fecha)
+HAVING AVG(DF.precio * 1.0) < (SELECT AVG(DF2.precio * 1.0)
+         FROM facturas F2 JOIN detalle_facturas DF2 ON DF2.nro_factura = F2.nro_factura
+         JOIN libros L2 ON L2.cod_libro = DF2.cod_libro JOIN idiomas I2 ON I2.id_idioma = L2.id_idioma
+         WHERE I2.idioma = 'Español' AND L2.stock > 0 AND YEAR(F2.fecha)=YEAR(F.fecha) AND MONTH(F2.fecha)=MONTH(F.fecha))
+ORDER BY [Año] DESC, [Mes], [Editorial];`;
+
+    const SQL4 = `SELECT  c.cod_cliente, c.apellido + ' ' + c.nombre AS Cliente, SUM(dp.cantidad * dp.precio) AS TotalGastado
+INTO #GastoClientes
+FROM clientes c
+JOIN pedidos p ON c.cod_cliente = p.cod_cliente
+JOIN detalle_pedidos dp ON p.nro_pedido = dp.nro_pedido
+WHERE YEAR(p.fecha) = YEAR(GETDATE())
+GROUP BY c.cod_cliente, c.apellido, c.nombre;
+
+SELECT  cod_cliente, Cliente, TotalGastado
+FROM #GastoClientes
+WHERE TotalGastado > ( SELECT AVG(TotalGastado)  FROM #GastoClientes )
+ORDER BY TotalGastado DESC;
+DROP TABLE #GastoClientes;`;
+
+    const SQLSP = `EXEC dbo.sp_crear_autor @nombre, @apellido, @biografia, @fecha_nacimiento, @id_nacionalidad, @nacionalidad, @id_sexo, @sexo;`;
+
+    function injectSQL(){
+      ['sql1','sql1m'].forEach(id => document.getElementById(id).textContent = SQL1);
+      ['sql2','sql2m'].forEach(id => document.getElementById(id).textContent = SQL2);
+      ['sql3','sql3m'].forEach(id => document.getElementById(id).textContent = SQL3);
+      ['sql4','sql4m'].forEach(id => document.getElementById(id).textContent = SQL4);
+      ['sqlSP','sqlSPm'].forEach(id => document.getElementById(id).textContent = SQLSP);
+    }
+
+    // Botón pequeño para llevar SQL a portapapeles (desde icono de código)
+    document.addEventListener('click', (e)=>{
+      const btn = e.target.closest('[data-sql-target]');
+      if(!btn) return;
+      const target = document.querySelector(btn.getAttribute('data-sql-target'));
+      if(!target) return;
+      navigator.clipboard.writeText(target.textContent).then(()=>{
+        btn.innerHTML = '<i class="bi bi-clipboard-check"></i>';
+        setTimeout(()=> btn.innerHTML = '<i class="bi bi-code"></i>', 1200);
+      });
+    });
+
+    // Init
+    document.getElementById('year').textContent = new Date().getFullYear();
+    (async ()=>{ try { await renderRetrasos(); await renderClientes(); await renderFact(); await renderGasto(); injectSQL(); } catch(err){ console.error(err); alert('No se pudo obtener datos de la API. Configurá la URL con setApiBase(\'http://host:puerto\')'); } })();
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
